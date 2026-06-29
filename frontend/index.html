@@ -82,10 +82,14 @@
       <section id="results-section" class="card card--results" aria-labelledby="results-title" hidden>
         <div class="card__header">
           <h2 id="results-title" class="card__title">Sorgu Sonuçları</h2>
-          <!-- Son sorgu sonucunu CSV olarak indir -->
-          <button type="button" id="csv-export-btn" class="btn btn--secondary" disabled>
-            CSV İndir
-          </button>
+          <div class="card__header-actions">
+            <button type="button" id="csv-export-btn" class="btn btn--secondary" disabled>
+              CSV İndir
+            </button>
+            <button type="button" id="clear-table-btn" class="btn btn--danger">
+              Tabloyu Temizle
+            </button>
+          </div>
         </div>
 
         <div id="risk-badge" class="risk-badge" aria-live="polite"></div>

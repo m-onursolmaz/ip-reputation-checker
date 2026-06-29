@@ -138,6 +138,14 @@ function getDashboardStats() {
   };
 }
 
+/**
+ * Kayıtlı sorgu sonuçlarını LocalStorage'dan siler.
+ * IP geçmişini etkilemez.
+ */
+function clearQueryResults() {
+  localStorage.removeItem(STATS_STORAGE_KEY);
+}
+
 // Diğer modüllerin kullanması için global scope'a ekle
 window.IpHistory = {
   getHistory,
@@ -145,5 +153,6 @@ window.IpHistory = {
   renderHistory,
   getQueryResults,
   addQueryResult,
+  clearQueryResults,
   getDashboardStats,
 };

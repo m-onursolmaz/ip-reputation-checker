@@ -14,6 +14,7 @@
   const resultsTableBody = document.getElementById('results-table-body');
   const riskBadge = document.getElementById('risk-badge');
   const csvExportBtn = document.getElementById('csv-export-btn');
+  const clearTableBtn = document.getElementById('clear-table-btn');
   const historyList = document.getElementById('history-list');
   const historyEmpty = document.getElementById('history-empty');
 
@@ -523,6 +524,19 @@
 
   // CSV indirme butonu
   csvExportBtn.addEventListener('click', exportLastResultToCsv);
+
+  // Tabloyu temizle butonu
+  clearTableBtn.addEventListener('click', () => {
+    window.IpHistory.clearQueryResults();
+    lastBatchResults = [];
+    csvExportBtn.disabled = true;
+    resultsGrid.hidden = true;
+    resultsGrid.innerHTML = '';
+    riskBadge.className = 'risk-badge';
+    riskBadge.textContent = '';
+    renderResultsTable(null);
+    renderDashboard();
+  });
 
   /**
    * Sayfa yüklendiğinde LocalStorage'daki son sonucu geri yükler.
