@@ -8,6 +8,7 @@ const { isValidIp, normalizeIp } = require('../utils/ipValidator');
 const { getRiskLevel } = require('../utils/riskLevel');
 const { checkIpReputation } = require('../services/abuseIpDb');
 const { checkIpOtx } = require('../services/otx');
+const { checkIpVirusTotal } = require('../services/virustotal');
 
 const router = express.Router();
 
@@ -84,12 +85,22 @@ router.post('/', async (req, res) => {
       otx = { available: false, error: 'Yapılandırılmadı' };
     }
 
+    // VirusTotal opsiyonel: key yoksa veya hata olursa AbuseIPDB sonucunu bozmaz
+    const vtApiKey = process.env.VT_API_KEY;
+    let virustotal;
+    if (vtApiKey && vtApiKey.trim() !== '' && vtApiKey !== 'your_virustotal_api_key_here') {
+      virustotal = await checkIpVirusTotal(ip, vtApiKey.trim());
+    } else {
+      virustotal = { available: false, error: 'Yapılandırılmadı' };
+    }
+
     return res.json({
       success: true,
       data: {
         ...result,
         riskLevel,
         otx,
+        virustotal,
       },
     });
   } catch (error) {

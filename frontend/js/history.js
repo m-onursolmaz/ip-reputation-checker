@@ -109,6 +109,7 @@ function addQueryResult(data) {
     lastReportedAt: data.lastReportedAt ?? null,
     riskLevel: data.riskLevel ?? { level: 'unknown', label: 'Bilinmiyor' },
     otx: data.otx ?? null,
+    virustotal: data.virustotal ?? null,
     queriedAt: new Date().toISOString(),
   };
 

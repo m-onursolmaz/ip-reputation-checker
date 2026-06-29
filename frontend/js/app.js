@@ -132,6 +132,15 @@
   }
 
   /**
+   * VirusTotal verisinden belirtilen istatistik değerini döndürür.
+   */
+  function getVtStat(vt, key) {
+    if (!vt) return '—';
+    if (!vt.available) return key === 'malicious' ? (vt.error || 'Yapılandırılmadı') : '—';
+    return String(vt[key] ?? 0);
+  }
+
+  /**
    * OTX verisinden okunabilir pulse sayısı veya durum metni döndürür.
    */
   function getOtxPulseText(otx) {
@@ -173,6 +182,10 @@
       { value: statusLabel, status: true, level: riskLevel },
       { value: getOtxPulseText(row.otx) },
       { value: getOtxRepText(row.otx) },
+      { value: getVtStat(row.virustotal, 'malicious') },
+      { value: getVtStat(row.virustotal, 'suspicious') },
+      { value: getVtStat(row.virustotal, 'harmless') },
+      { value: getVtStat(row.virustotal, 'undetected') },
     ];
 
     cells.forEach(({ value, mono, badge, status, level }) => {
@@ -214,7 +227,7 @@
     tr.appendChild(tdIp);
 
     const tdMsg = document.createElement('td');
-    tdMsg.colSpan = 10;
+    tdMsg.colSpan = 14;
     tdMsg.className = 'results-table__error-msg';
     tdMsg.textContent = message;
     tr.appendChild(tdMsg);
@@ -232,7 +245,7 @@
     if (results.length === 0) {
       const tr = document.createElement('tr');
       const td = document.createElement('td');
-      td.colSpan = 11;
+      td.colSpan = 15;
       td.className = 'results-table__empty';
       td.textContent = 'Henüz kayıtlı sorgu sonucu yok.';
       tr.appendChild(td);
@@ -283,6 +296,10 @@
       { label: 'Risk Level', value: data.riskLevel?.label || 'Bilinmiyor' },
       { label: 'OTX Pulse Count', value: getOtxPulseText(data.otx) },
       { label: 'OTX Reputation', value: getOtxRepText(data.otx) },
+      { label: 'VirusTotal Malicious', value: getVtStat(data.virustotal, 'malicious') },
+      { label: 'VirusTotal Suspicious', value: getVtStat(data.virustotal, 'suspicious') },
+      { label: 'VirusTotal Harmless', value: getVtStat(data.virustotal, 'harmless') },
+      { label: 'VirusTotal Undetected', value: getVtStat(data.virustotal, 'undetected') },
     ];
 
     rows.forEach(({ label, value, mono }) => {
@@ -347,6 +364,10 @@
       'Status',
       'OTX Pulse Count',
       'OTX Reputation',
+      'VT Malicious',
+      'VT Suspicious',
+      'VT Harmless',
+      'VT Undetected',
     ];
 
     const dataRows = lastBatchResults.map(({ ip, data, errorMessage }) => {
@@ -363,9 +384,13 @@
           getStatusLabel(data.riskLevel),
           getOtxPulseText(data.otx),
           getOtxRepText(data.otx),
+          getVtStat(data.virustotal, 'malicious'),
+          getVtStat(data.virustotal, 'suspicious'),
+          getVtStat(data.virustotal, 'harmless'),
+          getVtStat(data.virustotal, 'undetected'),
         ];
       }
-      return [ip, '', '', '', '', '', '', 'Hata', errorMessage || '', '', ''];
+      return [ip, '', '', '', '', '', '', 'Hata', errorMessage || '', '', '', '', '', ''];
     });
 
     const csvLines = [
