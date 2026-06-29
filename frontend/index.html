@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="IP Reputation Checker - AbuseIPDB ile IP itibar sorgulama">
+  <title>IP Reputation Checker</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app">
+    <!-- Üst başlık alanı -->
+    <header class="header">
+      <div class="header__icon" aria-hidden="true">🛡️</div>
+      <h1 class="header__title">IP Reputation Checker</h1>
+      <p class="header__subtitle">
+        IPv4 veya IPv6 adreslerinin itibar skorunu AbuseIPDB üzerinden sorgulayın.
+      </p>
+    </header>
+
+    <main class="main">
+      <!-- IP sorgulama formu -->
+      <section class="card card--form" aria-labelledby="form-title">
+        <h2 id="form-title" class="card__title">IP Adresi Sorgula</h2>
+
+        <form id="check-form" class="form" novalidate>
+          <label for="ip-input" class="form__label">IP Adresi</label>
+          <div class="form__row">
+            <input
+              type="text"
+              id="ip-input"
+              name="ip"
+              class="form__input"
+              placeholder="Örn: 8.8.8.8 veya 2001:4860:4860::8888"
+              autocomplete="off"
+              spellcheck="false"
+              required
+            >
+            <button type="submit" id="submit-btn" class="btn btn--primary">
+              <span class="btn__text">Sorgula</span>
+              <span class="btn__loader" hidden aria-hidden="true"></span>
+            </button>
+          </div>
+          <p class="form__hint">Geçerli bir IPv4 veya IPv6 adresi girin.</p>
+        </form>
+
+        <!-- Hata mesajları burada gösterilir -->
+        <div id="error-alert" class="alert alert--error" role="alert" hidden></div>
+      </section>
+
+      <!-- Sorgu sonuçları -->
+      <section id="results-section" class="card card--results" aria-labelledby="results-title" hidden>
+        <h2 id="results-title" class="card__title">Sorgu Sonuçları</h2>
+
+        <div id="risk-badge" class="risk-badge" aria-live="polite"></div>
+
+        <dl class="results-grid" id="results-grid">
+          <!-- JavaScript ile doldurulur -->
+        </dl>
+      </section>
+
+      <!-- Son sorgulanan IP'ler (LocalStorage) -->
+      <section class="card card--history" aria-labelledby="history-title">
+        <h2 id="history-title" class="card__title">Son Sorgulanan IP'ler</h2>
+        <p class="history__empty" id="history-empty">Henüz sorgu yapılmadı.</p>
+        <ul id="history-list" class="history-list" role="list"></ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Veriler <a href="https://www.abuseipdb.com/" target="_blank" rel="noopener noreferrer">AbuseIPDB</a> API'sinden alınmaktadır.</p>
+    </footer>
+  </div>
+
+  <!-- Modüler JavaScript dosyaları -->
+  <script src="js/history.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
