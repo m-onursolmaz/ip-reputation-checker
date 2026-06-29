@@ -4,7 +4,9 @@
  */
 
 const HISTORY_STORAGE_KEY = 'ipReputationHistory';
+const STATS_STORAGE_KEY = 'ipReputationStats';
 const MAX_HISTORY_ITEMS = 10;
+const MAX_STATS_ITEMS = 50;
 
 /**
  * LocalStorage'dan geçmiş IP listesini okur.
@@ -75,9 +77,71 @@ function renderHistory(listElement, emptyElement, onSelect) {
   });
 }
 
+/**
+ * LocalStorage'dan kayıtlı sorgu sonuçlarını okur.
+ * Dashboard ve tablo bu veriyi kullanır.
+ * @returns {object[]} Sorgu sonuçları (en yeni önce)
+ */
+function getQueryResults() {
+  try {
+    const raw = localStorage.getItem(STATS_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Başarılı bir sorgu sonucunu istatistikler için kaydeder.
+ * @param {object} data - Backend'den gelen sonuç objesi
+ */
+function addQueryResult(data) {
+  if (!data?.ipAddress) return;
+
+  const entry = {
+    ipAddress: data.ipAddress,
+    abuseConfidenceScore: data.abuseConfidenceScore ?? 0,
+    countryCode: data.countryCode ?? 'N/A',
+    isp: data.isp ?? 'Bilinmiyor',
+    domain: data.domain ?? 'N/A',
+    totalReports: data.totalReports ?? 0,
+    lastReportedAt: data.lastReportedAt ?? null,
+    riskLevel: data.riskLevel ?? { level: 'unknown', label: 'Bilinmiyor' },
+    queriedAt: new Date().toISOString(),
+  };
+
+  const updated = [entry, ...getQueryResults()].slice(0, MAX_STATS_ITEMS);
+  localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(updated));
+}
+
+/**
+ * Dashboard kartları için özet istatistikleri hesaplar.
+ * @returns {object} Toplam sorgu, risk dağılımı ve son IP
+ */
+function getDashboardStats() {
+  const results = getQueryResults();
+  const history = getHistory();
+
+  const countByLevel = (level) =>
+    results.filter((item) => item.riskLevel?.level === level).length;
+
+  return {
+    totalQueries: results.length,
+    clean: countByLevel('clean'),
+    low: countByLevel('low'),
+    medium: countByLevel('medium'),
+    high: countByLevel('high'),
+    lastIp: history[0] || results[0]?.ipAddress || '—',
+  };
+}
+
 // Diğer modüllerin kullanması için global scope'a ekle
 window.IpHistory = {
   getHistory,
   addToHistory,
   renderHistory,
+  getQueryResults,
+  addQueryResult,
+  getDashboardStats,
 };

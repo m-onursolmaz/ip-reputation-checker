@@ -61,9 +61,81 @@ a:hover {
 
 /* ---- Uygulama Kabuğu ---- */
 .app {
-  max-width: 720px;
+  max-width: 960px;
   margin: 0 auto;
   padding: 2rem 1.25rem 3rem;
+}
+
+/* Erişilebilirlik: ekran okuyucu için gizli başlık */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- Dashboard ---- */
+.dashboard {
+  margin-bottom: 1.25rem;
+}
+
+.dashboard__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.stat-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.stat-card__label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-bottom: 0.35rem;
+  font-weight: 500;
+}
+
+.stat-card__value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.stat-card__value--mono {
+  font-size: 0.85rem;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.stat-card--clean { border-left: 3px solid var(--color-success); }
+.stat-card--low { border-left: 3px solid #60a5fa; }
+.stat-card--medium { border-left: 3px solid var(--color-warning); }
+.stat-card--high { border-left: 3px solid var(--color-danger); }
+.stat-card--last { border-left: 3px solid var(--color-primary); }
+
+/* ---- Kart Başlık Satırı ---- */
+.card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.card__header .card__title {
+  margin-bottom: 0;
 }
 
 /* ---- Başlık ---- */
@@ -180,6 +252,20 @@ a:hover {
 }
 
 .btn--primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn--secondary {
+  background: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.btn--secondary:active:not(:disabled) {
   transform: scale(0.98);
 }
 
@@ -300,6 +386,144 @@ a:hover {
   font-family: 'Consolas', 'Monaco', monospace;
 }
 
+/* ---- Sonuç Tablosu ---- */
+.table-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.table-section__title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--color-text-muted);
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  min-width: 800px;
+}
+
+.results-table thead {
+  background: var(--color-bg-input);
+}
+
+.results-table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.results-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.results-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.results-table tbody tr:hover {
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.results-table__row--latest {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.results-table__mono {
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.results-table__empty {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: 1.5rem !important;
+}
+
+/* Tablo içi risk rozeti */
+.table-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.table-badge--clean {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--color-success);
+}
+
+.table-badge--low {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+.table-badge--medium {
+  background: rgba(234, 179, 8, 0.15);
+  color: var(--color-warning);
+}
+
+.table-badge--high {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--color-danger);
+}
+
+.table-badge--unknown {
+  background: rgba(139, 148, 158, 0.15);
+  color: var(--color-text-muted);
+}
+
+/* Tablo Status sütunu */
+.status-pill {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.status-pill--clean {
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--color-success);
+}
+
+.status-pill--low {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+.status-pill--medium {
+  background: rgba(234, 179, 8, 0.2);
+  color: var(--color-warning);
+}
+
+.status-pill--high {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--color-danger);
+}
+
+.status-pill--unknown {
+  background: rgba(139, 148, 158, 0.2);
+  color: var(--color-text-muted);
+}
+
 /* ---- Geçmiş Listesi ---- */
 .history__empty {
   color: var(--color-text-muted);
@@ -364,5 +588,22 @@ a:hover {
 
   .card {
     padding: 1.25rem;
+  }
+
+  .dashboard__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stat-card__value {
+    font-size: 1.25rem;
+  }
+
+  .card__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .card__header .btn--secondary {
+    width: 100%;
   }
 }

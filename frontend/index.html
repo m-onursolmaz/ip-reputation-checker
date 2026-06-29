@@ -19,6 +19,37 @@
     </header>
 
     <main class="main">
+      <!-- Dashboard: LocalStorage'daki sorgu istatistikleri -->
+      <section class="dashboard" id="dashboard" aria-labelledby="dashboard-title">
+        <h2 id="dashboard-title" class="visually-hidden">İstatistikler</h2>
+        <div class="dashboard__grid">
+          <article class="stat-card">
+            <p class="stat-card__label">Toplam Sorgu</p>
+            <p class="stat-card__value" id="stat-total">0</p>
+          </article>
+          <article class="stat-card stat-card--clean">
+            <p class="stat-card__label">Temiz IP</p>
+            <p class="stat-card__value" id="stat-clean">0</p>
+          </article>
+          <article class="stat-card stat-card--low">
+            <p class="stat-card__label">Düşük Risk</p>
+            <p class="stat-card__value" id="stat-low">0</p>
+          </article>
+          <article class="stat-card stat-card--medium">
+            <p class="stat-card__label">Orta Risk</p>
+            <p class="stat-card__value" id="stat-medium">0</p>
+          </article>
+          <article class="stat-card stat-card--high">
+            <p class="stat-card__label">Yüksek Risk</p>
+            <p class="stat-card__value" id="stat-high">0</p>
+          </article>
+          <article class="stat-card stat-card--last">
+            <p class="stat-card__label">Son Sorgulanan IP</p>
+            <p class="stat-card__value stat-card__value--mono" id="stat-last-ip">—</p>
+          </article>
+        </div>
+      </section>
+
       <!-- IP sorgulama formu -->
       <section class="card card--form" aria-labelledby="form-title">
         <h2 id="form-title" class="card__title">IP Adresi Sorgula</h2>
@@ -50,13 +81,45 @@
 
       <!-- Sorgu sonuçları -->
       <section id="results-section" class="card card--results" aria-labelledby="results-title" hidden>
-        <h2 id="results-title" class="card__title">Sorgu Sonuçları</h2>
+        <div class="card__header">
+          <h2 id="results-title" class="card__title">Sorgu Sonuçları</h2>
+          <!-- Son sorgu sonucunu CSV olarak indir -->
+          <button type="button" id="csv-export-btn" class="btn btn--secondary" disabled>
+            CSV İndir
+          </button>
+        </div>
 
         <div id="risk-badge" class="risk-badge" aria-live="polite"></div>
 
+        <!-- Mevcut kart görünümü (detaylı özet) -->
         <dl class="results-grid" id="results-grid">
           <!-- JavaScript ile doldurulur -->
         </dl>
+
+        <!-- Tablo görünümü: kayıtlı tüm sorgu sonuçları -->
+        <div class="table-section">
+          <h3 class="table-section__title">Sonuç Tablosu</h3>
+          <div class="table-wrapper">
+            <table class="results-table" id="results-table">
+              <thead>
+                <tr>
+                  <th scope="col">IP Address</th>
+                  <th scope="col">Abuse Score</th>
+                  <th scope="col">Country Code</th>
+                  <th scope="col">ISP</th>
+                  <th scope="col">Domain</th>
+                  <th scope="col">Total Reports</th>
+                  <th scope="col">Last Reported At</th>
+                  <th scope="col">Risk Level</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody id="results-table-body">
+                <!-- JavaScript ile doldurulur -->
+              </tbody>
+            </table>
+          </div>
+        </div>
       </section>
 
       <!-- Son sorgulanan IP'ler (LocalStorage) -->
