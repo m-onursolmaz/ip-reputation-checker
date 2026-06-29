@@ -12,11 +12,26 @@ IPv4 ve IPv6 adreslerinin itibar skorunu sorgulayan full stack web uygulaması. 
 - Dashboard ile sorgu istatistiklerini özetler
 - Sorgu sonuçlarını CSV olarak indirmeyi destekler (tek veya çoklu IP)
 
-## Hangi API Kullanılıyor?
+## Hangi API'ler Kullanılıyor?
+
+### AbuseIPDB (Zorunlu)
 
 [AbuseIPDB API v2](https://docs.abuseipdb.com/) — `GET https://api.abuseipdb.com/api/v2/check`
 
 Backend, API anahtarını HTTP `Key` header'ı ile gönderir. API anahtarı yalnızca sunucu tarafında tutulur; frontend doğrudan AbuseIPDB'ye istek atmaz.
+
+### AlienVault OTX (Opsiyonel)
+
+[AlienVault OTX API v1](https://otx.alienvault.com/api) — `GET https://otx.alienvault.com/api/v1/indicators/IPv4/{ip}/general`
+
+OTX entegrasyonu tamamen opsiyoneldir:
+- `OTX_API_KEY` `.env` dosyasında tanımlıysa her sorguda OTX'ten ek tehdit bilgisi çekilir
+- `OTX_API_KEY` yoksa veya boşsa uygulama sorunsuz çalışmaya devam eder; OTX sütunları "Yapılandırılmadı" olarak gösterilir
+- OTX'ten hata gelse bile AbuseIPDB sonucu etkilenmez
+
+OTX'ten alınan bilgiler:
+- **Pulse Count** — IP'nin kaç adet tehdit istihbarat kaydında (pulse) geçtiği
+- **Reputation** — OTX reputation skoru (0 = temiz, yükseldikçe şüpheli)
 
 ## Nasıl Çalıştırılır?
 
@@ -32,14 +47,16 @@ cd backend
 Copy-Item .env.example .env
 ```
 
-`.env` dosyasını açın ve `ABUSEIPDB_API_KEY` değerini kendi anahtarınızla değiştirin:
+`.env` dosyasını açın ve değerleri doldurun:
 
 ```
-ABUSEIPDB_API_KEY=gercek_api_anahtariniz
+ABUSEIPDB_API_KEY=gercek_abuseipdb_anahtariniz
+OTX_API_KEY=gercek_otx_anahtariniz
 PORT=3000
 ```
 
-API anahtarını [AbuseIPDB hesap sayfasından](https://www.abuseipdb.com/account/api) alabilirsiniz.
+- **ABUSEIPDB_API_KEY** — [AbuseIPDB hesap sayfasından](https://www.abuseipdb.com/account/api) alın (zorunlu)
+- **OTX_API_KEY** — [AlienVault OTX API sayfasından](https://otx.alienvault.com/api) alın (opsiyonel; bırakılabilir)
 
 ### 2. Backend Bağımlılıklarını Kurun
 

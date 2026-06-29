@@ -108,6 +108,7 @@ function addQueryResult(data) {
     totalReports: data.totalReports ?? 0,
     lastReportedAt: data.lastReportedAt ?? null,
     riskLevel: data.riskLevel ?? { level: 'unknown', label: 'Bilinmiyor' },
+    otx: data.otx ?? null,
     queriedAt: new Date().toISOString(),
   };
 

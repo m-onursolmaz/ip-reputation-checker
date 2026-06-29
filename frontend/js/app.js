@@ -132,6 +132,23 @@
   }
 
   /**
+   * OTX verisinden okunabilir pulse sayısı veya durum metni döndürür.
+   */
+  function getOtxPulseText(otx) {
+    if (!otx) return '—';
+    if (!otx.available) return otx.error || 'Yapılandırılmadı';
+    return String(otx.pulseCount ?? 0);
+  }
+
+  /**
+   * OTX verisinden reputation skoru veya durum metni döndürür.
+   */
+  function getOtxRepText(otx) {
+    if (!otx || !otx.available) return '—';
+    return String(otx.reputation ?? 0);
+  }
+
+  /**
    * Başarılı bir sonuç için tablo satırı oluşturur.
    */
   function createTableRow(row, isLatest = false) {
@@ -154,6 +171,8 @@
       { value: formatDate(row.lastReportedAt) },
       { value: riskLabel, badge: true, level: riskLevel },
       { value: statusLabel, status: true, level: riskLevel },
+      { value: getOtxPulseText(row.otx) },
+      { value: getOtxRepText(row.otx) },
     ];
 
     cells.forEach(({ value, mono, badge, status, level }) => {
@@ -195,7 +214,7 @@
     tr.appendChild(tdIp);
 
     const tdMsg = document.createElement('td');
-    tdMsg.colSpan = 8;
+    tdMsg.colSpan = 10;
     tdMsg.className = 'results-table__error-msg';
     tdMsg.textContent = message;
     tr.appendChild(tdMsg);
@@ -213,7 +232,7 @@
     if (results.length === 0) {
       const tr = document.createElement('tr');
       const td = document.createElement('td');
-      td.colSpan = 9;
+      td.colSpan = 11;
       td.className = 'results-table__empty';
       td.textContent = 'Henüz kayıtlı sorgu sonucu yok.';
       tr.appendChild(td);
@@ -262,6 +281,8 @@
       { label: 'Total Reports', value: String(data.totalReports) },
       { label: 'Last Reported At', value: formatDate(data.lastReportedAt) },
       { label: 'Risk Level', value: data.riskLevel?.label || 'Bilinmiyor' },
+      { label: 'OTX Pulse Count', value: getOtxPulseText(data.otx) },
+      { label: 'OTX Reputation', value: getOtxRepText(data.otx) },
     ];
 
     rows.forEach(({ label, value, mono }) => {
@@ -324,6 +345,8 @@
       'Last Reported At',
       'Risk Level',
       'Status',
+      'OTX Pulse Count',
+      'OTX Reputation',
     ];
 
     const dataRows = lastBatchResults.map(({ ip, data, errorMessage }) => {
@@ -338,9 +361,11 @@
           data.lastReportedAt ? formatDate(data.lastReportedAt) : 'Hiç raporlanmadı',
           data.riskLevel?.label || 'Bilinmiyor',
           getStatusLabel(data.riskLevel),
+          getOtxPulseText(data.otx),
+          getOtxRepText(data.otx),
         ];
       }
-      return [ip, '', '', '', '', '', '', 'Hata', errorMessage || ''];
+      return [ip, '', '', '', '', '', '', 'Hata', errorMessage || '', '', ''];
     });
 
     const csvLines = [
@@ -484,7 +509,6 @@
       const latest = storedResults[0];
       lastBatchResults = [{ ip: latest.ipAddress, data: latest, errorMessage: null }];
       csvExportBtn.disabled = false;
-
       renderSingleResult(latest);
       resultsSection.hidden = false;
     }

@@ -7,6 +7,7 @@ const express = require('express');
 const { isValidIp, normalizeIp } = require('../utils/ipValidator');
 const { getRiskLevel } = require('../utils/riskLevel');
 const { checkIpReputation } = require('../services/abuseIpDb');
+const { checkIpOtx } = require('../services/otx');
 
 const router = express.Router();
 
@@ -74,11 +75,21 @@ router.post('/', async (req, res) => {
     const result = await checkIpReputation(ip, apiKey.trim());
     const riskLevel = getRiskLevel(result.abuseConfidenceScore);
 
+    // OTX opsiyonel: key yoksa veya hata olursa AbuseIPDB sonucunu bozmaz
+    const otxApiKey = process.env.OTX_API_KEY;
+    let otx;
+    if (otxApiKey && otxApiKey.trim() !== '' && otxApiKey !== 'your_otx_api_key_here') {
+      otx = await checkIpOtx(ip, otxApiKey.trim());
+    } else {
+      otx = { available: false, error: 'Yapılandırılmadı' };
+    }
+
     return res.json({
       success: true,
       data: {
         ...result,
         riskLevel,
+        otx,
       },
     });
   } catch (error) {
