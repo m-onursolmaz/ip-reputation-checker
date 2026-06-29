@@ -25,12 +25,11 @@
   const statHigh = document.getElementById('stat-high');
   const statLastIp = document.getElementById('stat-last-ip');
 
-  // CSV export için bellekte tutulan son başarılı sorgu
-  let lastQueryResult = null;
+  // CSV export için son sorgu grubu
+  let lastBatchResults = [];
 
   /**
    * Basit IPv4/IPv6 doğrulama (frontend tarafında erken uyarı için).
-   * Kesin doğrulama backend'de yapılır.
    */
   function isValidIpFormat(ip) {
     const trimmed = ip.trim();
@@ -67,8 +66,6 @@
 
   /**
    * ISO tarihini okunabilir Türkçe formata çevirir.
-   * @param {string|null} isoDate - ISO 8601 tarih string'i
-   * @returns {string} Formatlanmış tarih veya "Hiç raporlanmadı"
    */
   function formatDate(isoDate) {
     if (!isoDate) {
@@ -86,9 +83,7 @@
   }
 
   /**
-   * Risk seviyesine göre durum etiketi döndürür (tablo Status sütunu).
-   * @param {object} riskLevel - { level, label }
-   * @returns {string} Kısa durum metni
+   * Risk seviyesine göre durum etiketi döndürür.
    */
   function getStatusLabel(riskLevel) {
     const statusMap = {
@@ -137,9 +132,7 @@
   }
 
   /**
-   * Tablo satırı oluşturur.
-   * @param {object} row - Sorgu sonucu objesi
-   * @param {boolean} isLatest - En son sorgu mu (vurgulama için)
+   * Başarılı bir sonuç için tablo satırı oluşturur.
    */
   function createTableRow(row, isLatest = false) {
     const tr = document.createElement('tr');
@@ -190,8 +183,28 @@
   }
 
   /**
+   * Hatalı bir IP için tablo satırı oluşturur.
+   */
+  function createErrorTableRow(ip, message) {
+    const tr = document.createElement('tr');
+    tr.className = 'results-table__row--error';
+
+    const tdIp = document.createElement('td');
+    tdIp.className = 'results-table__mono';
+    tdIp.textContent = ip;
+    tr.appendChild(tdIp);
+
+    const tdMsg = document.createElement('td');
+    tdMsg.colSpan = 8;
+    tdMsg.className = 'results-table__error-msg';
+    tdMsg.textContent = message;
+    tr.appendChild(tdMsg);
+
+    return tr;
+  }
+
+  /**
    * LocalStorage'daki tüm sorgu sonuçlarını tabloya render eder.
-   * @param {string|null} latestIp - Vurgulanacak en son sorgulanan IP
    */
   function renderResultsTable(latestIp = null) {
     const results = window.IpHistory.getQueryResults();
@@ -215,17 +228,29 @@
   }
 
   /**
-   * Sorgu sonuçlarını ekranda gösterir (kart + tablo).
-   * @param {object} data - Backend'den gelen data objesi
+   * Toplu sorgu sonuçlarını tabloya render eder (başarılı + hatalı).
    */
-  function renderResults(data) {
-    lastQueryResult = data;
-    csvExportBtn.disabled = false;
+  function renderBatchTable(batchResults) {
+    resultsTableBody.innerHTML = '';
 
+    batchResults.forEach(({ ip, data, errorMessage }) => {
+      if (data) {
+        resultsTableBody.appendChild(createTableRow(data, false));
+      } else {
+        resultsTableBody.appendChild(createErrorTableRow(ip, errorMessage));
+      }
+    });
+  }
+
+  /**
+   * Tek IP sonucunu ekranda gösterir (kart + tablo).
+   */
+  function renderSingleResult(data) {
     const riskClass = `risk-badge--${data.riskLevel?.level || 'unknown'}`;
     riskBadge.className = `risk-badge ${riskClass}`;
     riskBadge.textContent = `Risk: ${data.riskLevel?.label || 'Bilinmiyor'} (Skor: ${data.abuseConfidenceScore})`;
 
+    resultsGrid.hidden = false;
     resultsGrid.innerHTML = '';
 
     const rows = [
@@ -242,16 +267,35 @@
     rows.forEach(({ label, value, mono }) => {
       resultsGrid.appendChild(createResultRow(label, value, mono));
     });
-
-    renderResultsTable(data.ipAddress);
-    resultsSection.hidden = false;
-    resultsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
   /**
-   * CSV hücre değerini güvenli biçimde kaçırır (virgül, tırnak, satır sonu).
-   * @param {string|number|null} value
-   * @returns {string}
+   * Toplu sorgu özet badge'ini günceller.
+   */
+  function renderBatchSummaryBadge(batchResults) {
+    const successCount = batchResults.filter((r) => r.data).length;
+    const errorCount = batchResults.filter((r) => r.errorMessage).length;
+    const highCount = batchResults.filter(
+      (r) => r.data?.riskLevel?.level === 'high'
+    ).length;
+
+    let badgeLevel = 'clean';
+    if (errorCount > 0 || highCount > 0) badgeLevel = 'high';
+    else if (batchResults.some((r) => r.data?.riskLevel?.level === 'medium')) badgeLevel = 'medium';
+    else if (batchResults.some((r) => r.data?.riskLevel?.level === 'low')) badgeLevel = 'low';
+
+    riskBadge.className = `risk-badge risk-badge--${badgeLevel}`;
+    riskBadge.textContent =
+      `${batchResults.length} IP sorgulandı — ${successCount} başarılı` +
+      (errorCount > 0 ? `, ${errorCount} hatalı` : '') +
+      (highCount > 0 ? ` · ${highCount} yüksek riskli` : '');
+
+    resultsGrid.hidden = true;
+    resultsGrid.innerHTML = '';
+  }
+
+  /**
+   * CSV hücre değerini güvenli biçimde kaçırır.
    */
   function escapeCsvValue(value) {
     const text = value == null ? '' : String(value);
@@ -262,15 +306,14 @@
   }
 
   /**
-   * Son sorgu sonucunu CSV dosyası olarak indirir.
+   * Son sorgu grubunu CSV olarak indirir (tek veya çoklu IP).
    */
   function exportLastResultToCsv() {
-    if (!lastQueryResult) {
+    if (!lastBatchResults || lastBatchResults.length === 0) {
       showError('İndirilecek sorgu sonucu bulunamadı. Önce bir IP sorgulayın.');
       return;
     }
 
-    const data = lastQueryResult;
     const headers = [
       'IP Address',
       'Abuse Score',
@@ -280,83 +323,152 @@
       'Total Reports',
       'Last Reported At',
       'Risk Level',
+      'Status',
     ];
 
-    const row = [
-      data.ipAddress,
-      data.abuseConfidenceScore,
-      data.countryCode,
-      data.isp,
-      data.domain,
-      data.totalReports,
-      data.lastReportedAt ? formatDate(data.lastReportedAt) : 'Hiç raporlanmadı',
-      data.riskLevel?.label || 'Bilinmiyor',
-    ];
+    const dataRows = lastBatchResults.map(({ ip, data, errorMessage }) => {
+      if (data) {
+        return [
+          data.ipAddress,
+          data.abuseConfidenceScore,
+          data.countryCode,
+          data.isp,
+          data.domain,
+          data.totalReports,
+          data.lastReportedAt ? formatDate(data.lastReportedAt) : 'Hiç raporlanmadı',
+          data.riskLevel?.label || 'Bilinmiyor',
+          getStatusLabel(data.riskLevel),
+        ];
+      }
+      return [ip, '', '', '', '', '', '', 'Hata', errorMessage || ''];
+    });
 
-    const csvContent = [
+    const csvLines = [
       headers.map(escapeCsvValue).join(','),
-      row.map(escapeCsvValue).join(','),
-    ].join('\n');
+      ...dataRows.map((row) => row.map(escapeCsvValue).join(',')),
+    ];
 
-    // UTF-8 BOM: Excel'de Türkçe karakterlerin doğru görünmesi için
-    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['﻿' + csvLines.join('\n')], {
+      type: 'text/csv;charset=utf-8;',
+    });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
 
-    const safeIp = String(data.ipAddress).replace(/[^a-zA-Z0-9.-]/g, '_');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
     link.href = url;
-    link.download = `ip-reputation-${safeIp}.csv`;
+    link.download =
+      lastBatchResults.length === 1
+        ? `ip-reputation-${String(lastBatchResults[0].ip).replace(/[^a-zA-Z0-9.-]/g, '_')}.csv`
+        : `ip-reputation-batch-${timestamp}.csv`;
     link.click();
 
     URL.revokeObjectURL(url);
   }
 
   /**
-   * IP sorgusu yapar (form gönderimi veya geçmişten seçim).
-   * @param {string} ip - Sorgulanacak IP
+   * Geçmiş listesini yeniler.
    */
-  async function performCheck(ip) {
+  function refreshHistory() {
+    window.IpHistory.renderHistory(historyList, historyEmpty, (selectedIp) => {
+      ipInput.value = selectedIp;
+      performBatchCheck(selectedIp);
+    });
+  }
+
+  /**
+   * Textarea'daki IP adreslerini satır satır parse eder.
+   * Boş satırları ve tekrar eden IP'leri temizler.
+   */
+  function parseIpList(rawInput) {
+    const seen = new Set();
+    return rawInput
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => {
+        if (!line) return false;
+        if (seen.has(line)) return false;
+        seen.add(line);
+        return true;
+      });
+  }
+
+  /**
+   * Tek veya çoklu IP sorgusunu yönetir.
+   */
+  async function performBatchCheck(rawInput) {
     hideError();
 
-    const trimmed = ip.trim();
+    const ips = parseIpList(rawInput);
 
-    if (!trimmed) {
+    if (ips.length === 0) {
       showError(window.IpApi.ERROR_MESSAGES.EMPTY_IP);
-      ipInput.focus();
-      return;
-    }
-
-    if (!isValidIpFormat(trimmed)) {
-      showError(window.IpApi.ERROR_MESSAGES.INVALID_IP);
       ipInput.focus();
       return;
     }
 
     setLoading(true);
 
-    try {
-      const data = await window.IpApi.checkIp(trimmed);
-      renderResults(data);
+    const batchResults = [];
 
-      window.IpHistory.addToHistory(trimmed);
-      window.IpHistory.addQueryResult(data);
-      window.IpHistory.renderHistory(historyList, historyEmpty, (selectedIp) => {
-        ipInput.value = selectedIp;
-        performCheck(selectedIp);
-      });
-      renderDashboard();
-    } catch (error) {
-      showError(error.message || window.IpApi.ERROR_MESSAGES.UNKNOWN_ERROR);
-      resultsSection.hidden = true;
-    } finally {
-      setLoading(false);
+    for (const ip of ips) {
+      if (!isValidIpFormat(ip)) {
+        batchResults.push({
+          ip,
+          data: null,
+          errorMessage: `Geçersiz IP: ${window.IpApi.ERROR_MESSAGES.INVALID_IP}`,
+        });
+        continue;
+      }
+
+      try {
+        const data = await window.IpApi.checkIp(ip);
+        batchResults.push({ ip, data, errorMessage: null });
+        window.IpHistory.addToHistory(ip);
+        window.IpHistory.addQueryResult(data);
+      } catch (error) {
+        batchResults.push({
+          ip,
+          data: null,
+          errorMessage: error.message || window.IpApi.ERROR_MESSAGES.UNKNOWN_ERROR,
+        });
+      }
     }
+
+    setLoading(false);
+
+    lastBatchResults = batchResults;
+    csvExportBtn.disabled = false;
+
+    const successResults = batchResults.filter((r) => r.data);
+
+    if (ips.length === 1 && successResults.length === 1) {
+      // Tek başarılı IP: detay kartı göster
+      renderSingleResult(successResults[0].data);
+      renderResultsTable(successResults[0].data.ipAddress);
+    } else if (ips.length === 1 && successResults.length === 0) {
+      // Tek IP, başarısız: hata göster
+      showError(batchResults[0].errorMessage);
+      csvExportBtn.disabled = true;
+      lastBatchResults = [];
+      setLoading(false);
+      return;
+    } else {
+      // Çoklu IP: özet badge + toplu tablo
+      renderBatchSummaryBadge(batchResults);
+      renderBatchTable(batchResults);
+    }
+
+    resultsSection.hidden = false;
+    resultsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    refreshHistory();
+    renderDashboard();
   }
 
   // Form gönderimi
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    performCheck(ipInput.value);
+    performBatchCheck(ipInput.value);
   });
 
   // CSV indirme butonu
@@ -364,45 +476,22 @@
 
   /**
    * Sayfa yüklendiğinde LocalStorage'daki son sonucu geri yükler.
-   * Dashboard istatistikleri ve tablo böylece yenilemede de görünür kalır.
    */
   function restoreLastSession() {
     const storedResults = window.IpHistory.getQueryResults();
 
     if (storedResults.length > 0) {
       const latest = storedResults[0];
-      lastQueryResult = latest;
+      lastBatchResults = [{ ip: latest.ipAddress, data: latest, errorMessage: null }];
       csvExportBtn.disabled = false;
 
-      const riskClass = `risk-badge--${latest.riskLevel?.level || 'unknown'}`;
-      riskBadge.className = `risk-badge ${riskClass}`;
-      riskBadge.textContent = `Risk: ${latest.riskLevel?.label || 'Bilinmiyor'} (Skor: ${latest.abuseConfidenceScore})`;
-
-      resultsGrid.innerHTML = '';
-      const rows = [
-        { label: 'IP Address', value: latest.ipAddress, mono: true },
-        { label: 'Abuse Confidence Score', value: String(latest.abuseConfidenceScore) },
-        { label: 'Country Code', value: latest.countryCode },
-        { label: 'ISP', value: latest.isp },
-        { label: 'Domain', value: latest.domain },
-        { label: 'Total Reports', value: String(latest.totalReports) },
-        { label: 'Last Reported At', value: formatDate(latest.lastReportedAt) },
-        { label: 'Risk Level', value: latest.riskLevel?.label || 'Bilinmiyor' },
-      ];
-
-      rows.forEach(({ label, value, mono }) => {
-        resultsGrid.appendChild(createResultRow(label, value, mono));
-      });
-
+      renderSingleResult(latest);
       resultsSection.hidden = false;
     }
   }
 
   // Sayfa yüklendiğinde geçmiş, tablo ve dashboard'u göster
-  window.IpHistory.renderHistory(historyList, historyEmpty, (selectedIp) => {
-    ipInput.value = selectedIp;
-    performCheck(selectedIp);
-  });
+  refreshHistory();
   restoreLastSession();
   renderResultsTable(window.IpHistory.getQueryResults()[0]?.ipAddress ?? null);
   renderDashboard();

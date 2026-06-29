@@ -4,12 +4,13 @@ IPv4 ve IPv6 adreslerinin itibar skorunu sorgulayan full stack web uygulaması. 
 
 ## Proje Ne Yapıyor?
 
-- Kullanıcının girdiği IP adresini doğrular (IPv4 / IPv6)
+- Kullanıcının girdiği tek veya birden fazla IP adresini doğrular (IPv4 / IPv6)
 - Backend üzerinden AbuseIPDB API'sine güvenli sorgu gönderir
 - IP'nin abuse skoru, ülke kodu, ISP, domain, rapor sayısı ve risk seviyesini gösterir
+- Çoklu sorgularda her IP ayrı ayrı işlenir; bir IP başarısız olsa diğerleri devam eder
 - Son sorgulanan IP'leri tarayıcı LocalStorage'ında saklar
 - Dashboard ile sorgu istatistiklerini özetler
-- Son sorgu sonucunu CSV olarak indirmeyi destekler
+- Sorgu sonuçlarını CSV olarak indirmeyi destekler (tek veya çoklu IP)
 
 ## Hangi API Kullanılıyor?
 
@@ -102,18 +103,25 @@ Hesaplama backend'de `backend/utils/riskLevel.js` dosyasında yapılır ve sonu�
 
 ## Bonus Özellikler
 
+### Çoklu IP Sorgulama
+
+- Textarea'ya her satıra bir IP yazarak toplu sorgu yapılabilir
+- Tek IP girilirse mevcut detay kartı gösterilir
+- Birden fazla IP girilirse özet badge ve toplu tablo gösterilir
+- Boş satırlar ve tekrar eden IP'ler otomatik yoksayılır
+- Bir IP hata verse diğerleri sorgulanmaya devam eder; hatalı IP'ler tabloda kırmızı satırla gösterilir
+
 ### CSV Export
 
 - Sorgu sonrası **CSV İndir** butonu aktif olur
-- Yalnızca **son sorgu sonucu** indirilir
-- Sütunlar: IP Address, Abuse Score, Country Code, ISP, Domain, Total Reports, Last Reported At, Risk Level
+- Tek IP sorgusunda tek satırlık CSV, çoklu sorguda tüm sonuçlar (başarılı + hatalı) CSV'ye eklenir
+- Sütunlar: IP Address, Abuse Score, Country Code, ISP, Domain, Total Reports, Last Reported At, Risk Level, Status
 - UTF-8 BOM ile Excel uyumluluğu sağlanır
 
 ### Sonuç Tablosu
 
-- Kart görünümüne ek olarak tüm kayıtlı sorgu sonuçları tablo halinde listelenir
-- Sütunlar: IP Address, Abuse Score, Country Code, ISP, Domain, Total Reports, Last Reported At, Risk Level, Status
-- En son sorgu satırı vurgulanır
+- Tek IP: detay kart + tablo
+- Çoklu IP: özet badge + toplu tablo (hatalı IP'ler de gösterilir)
 - Status sütunu risk seviyesine göre kısa durum etiketi gösterir (Güvenli, İzle, Dikkat, Tehlikeli)
 
 ### Dashboard

@@ -219,10 +219,51 @@ a:hover {
   opacity: 0.7;
 }
 
+.form__textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  font-family: 'Courier New', monospace;
+  color: var(--color-text);
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.5;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.form__textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.form__textarea::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.7;
+  font-family: var(--font);
+}
+
+.form__textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
 .form__hint {
   font-size: 0.8rem;
   color: var(--color-text-muted);
-  margin-top: 0.5rem;
+  margin: 0;
 }
 
 /* ---- Buton ---- */
@@ -446,6 +487,15 @@ a:hover {
 
 .results-table__mono {
   font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.results-table__row--error {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.results-table__error-msg {
+  color: var(--color-error);
+  font-size: 0.85rem;
 }
 
 .results-table__empty {

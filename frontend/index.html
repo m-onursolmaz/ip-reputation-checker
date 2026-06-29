@@ -55,24 +55,23 @@
         <h2 id="form-title" class="card__title">IP Adresi Sorgula</h2>
 
         <form id="check-form" class="form" novalidate>
-          <label for="ip-input" class="form__label">IP Adresi</label>
-          <div class="form__row">
-            <input
-              type="text"
-              id="ip-input"
-              name="ip"
-              class="form__input"
-              placeholder="Örn: 8.8.8.8 veya 2001:4860:4860::8888"
-              autocomplete="off"
-              spellcheck="false"
-              required
-            >
+          <label for="ip-input" class="form__label">IP Adresi / IP Adresleri</label>
+          <textarea
+            id="ip-input"
+            name="ip"
+            class="form__textarea"
+            placeholder="Tek IP: 8.8.8.8&#10;Çoklu IP (her satıra bir tane):&#10;8.8.8.8&#10;1.1.1.1&#10;2001:4860:4860::8888"
+            autocomplete="off"
+            spellcheck="false"
+            rows="4"
+          ></textarea>
+          <div class="form__actions">
+            <p class="form__hint">Her satıra bir IP girin. IPv4 ve IPv6 desteklenir.</p>
             <button type="submit" id="submit-btn" class="btn btn--primary">
               <span class="btn__text">Sorgula</span>
               <span class="btn__loader" hidden aria-hidden="true"></span>
             </button>
           </div>
-          <p class="form__hint">Geçerli bir IPv4 veya IPv6 adresi girin.</p>
         </form>
 
         <!-- Hata mesajları burada gösterilir -->
