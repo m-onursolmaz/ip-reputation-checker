@@ -133,7 +133,7 @@ Copy-Item .env.example .env
 
 İsterseniz manuel olarak `backend` klasörü içinde `.env` adında yeni bir dosya da oluşturabilirsiniz.
 
-`.env` dosyası, API anahtarlarınızı ve sunucu ayarlarını güvenli şekilde saklar; bu dosya olmadan backend başlatılamaz.
+`.env` dosyası, API anahtarlarınızı ve sunucu ayarlarını güvenli şekilde saklar. ABUSEIPDB_API_KEY girilmezse IP sorgulaması çalışmaz.
 
 Oluşturulan `.env` dosyasını bir metin editörüyle açıp değerleri doldurun:
 
